@@ -51,13 +51,15 @@ def summarize(paper):
         model="openai/gpt-oss-120b",
         messages=[
             {"role": "system", "content": """あなたは論文の要約が得意なアシスタントです。
-            ・日本語で１行でポイントを簡潔にまとめて、それを３つ用意してください。,
-            ・数字は、算用数字のままで。,
-            ・専門用語は、英語のままでいいです。,
-            ・与えられた概要に書かれていないことは、書かないでください。,
+            ・日本語で１行でポイントを簡潔にまとめて、それを３つ用意してください。
+            ・数字は、算用数字のままで。
+            ・各行60字程度にする。
+            ・1行目は何をしたか、2行目は結果、3行目は意義や今後
+            ・専門用語は、英語のままでいいです。
+            ・与えられた概要に書かれていないことは、書かないでください。
             ・前置きや見出しは書かないでください。
             ・複数の名前を並べるときは、「、」で区切る"""},
-            {"role": "user", "content": f"以下の論文を記号は使わずに以下の要件を満たすように要約してください。: \n\n{paper['title']}\n{paper['summary']}"}
+            {"role": "user", "content": f"以下の論文を要約してください。: \n\n{paper['title']}\n{paper['summary']}"}
         ]
     )
     return output.choices[0].message.content
@@ -69,8 +71,8 @@ def send_slack(text):
 
 result = fetch_papers()
 papers = parse_papers(result)
-for paper in papers[:1]:
-   send_slack(f"{paper['title']}\n{summarize(paper)}\n{paper['url']}")
-
-
-    
+for paper in papers:
+    try:
+        send_slack(f"{paper['title']}\n{summarize(paper)}\n{paper['url']}")
+    except Exception as e:
+        print(f"失敗:{paper['title']} / {e}")
