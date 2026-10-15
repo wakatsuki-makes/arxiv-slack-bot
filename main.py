@@ -3,6 +3,7 @@ import feedparser
 import os
 from dotenv import load_dotenv
 from groq import Groq
+import time
 
 URL="https://export.arxiv.org/api/query"
 PARAMS={
@@ -12,13 +13,21 @@ PARAMS={
     "max_results": "5"}
 
 def fetch_papers():
-    response = requests.get(
-        URL,
-        params=PARAMS,
-        timeout=30,
-        headers={"User-Agent":"arxiv-slack-bot"}
-    )
-    return response
+    for attempt in range(3):
+        try:
+            response = requests.get(
+                URL,
+                params=PARAMS,
+                timeout=30,
+                headers={"User-Agent":"arxiv-slack-bot"}
+            )
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException:
+            if attempt == 2:
+                raise
+            else:
+                time.sleep(5)
 
 def parse_papers(response):
     feed = feedparser.parse(response.text)
