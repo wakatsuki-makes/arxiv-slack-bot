@@ -67,6 +67,7 @@ def summarize(paper):
 def send_slack(text):
     webhook_url = os.getenv("SLACK_WEBHOOK_URL")
     response = requests.post(webhook_url, json={"text": text}, timeout=30)
+    response.raise_for_status()
     print(response.status_code)
 
 result = fetch_papers()
